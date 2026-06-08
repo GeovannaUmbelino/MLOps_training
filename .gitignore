@@ -1,3 +1,37 @@
-src/__pycache__
+# Ambiente virtual — NUNCA versionar
+.venv/
+venv/
+env/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+
+# MLflow
 mlruns/
-src/.pytest_cache
+mlflow.db
+mlartifacts/
+
+# Modelos e outputs gerados
+models/best_model.pkl
+models/scaler.pkl
+models/columns.pkl
+outputs/
+
+# Data processada (gerada pelo pipeline)
+data/processed/
+
+# IDEs
+.vscode/
+.idea/
+*.code-workspace
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Env vars
+.env
