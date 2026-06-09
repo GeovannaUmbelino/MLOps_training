@@ -1,7 +1,7 @@
 version: "3.9"
 
 services:
-  # ── Training + MLflow tracking ─────────────────────────────────────────────
+  #  Training + MLflow tracking 
   train:
     build: .
     command: python main.py
@@ -13,7 +13,7 @@ services:
       - mlflow
     profiles: ["train"]
 
-  # ── MLflow UI ─────────────────────────────────────────────────────────────
+  #  MLflow UI 
   mlflow:
     build: .
     command: >
@@ -28,7 +28,7 @@ services:
     volumes:
       - .:/app
 
-  # ── FastAPI inference API ──────────────────────────────────────────────────
+  #  FastAPI inference API 
   api:
     build: .
     command: uvicorn src.api:app --host 0.0.0.0 --port 8000 --reload
@@ -39,7 +39,7 @@ services:
     depends_on:
       - mlflow
 
-  # ── Streamlit frontend ────────────────────────────────────────────────────
+  #  Streamlit frontend 
   streamlit:
     build: .
     command: streamlit run src/app.py --server.port 8501 --server.address 0.0.0.0

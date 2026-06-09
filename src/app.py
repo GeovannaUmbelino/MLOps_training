@@ -1,16 +1,3 @@
-"""
-src/app.py
-==========
-Interface Streamlit para o preditor de churn de clientes.
-
-Modos de inferência (toggle na sidebar):
-    - Direto: carrega best_model.pkl localmente (não precisa da API rodando)
-    - API:    chama POST /predict via requests (requer uvicorn src.api:app)
-
-Execução:
-    streamlit run src/app.py
-"""
-
 from __future__ import annotations
 
 import os
@@ -28,9 +15,9 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from src.config import MODEL_DIR
 from src.feature_engineering import preprocess_inference_row
 
-# ---------------------------------------------------------------------------
+
 # Configuração da página
-# ---------------------------------------------------------------------------
+
 st.set_page_config(
     page_title="Churn Predictor",
     page_icon="📡",
@@ -38,9 +25,9 @@ st.set_page_config(
 )
 
 
-# ---------------------------------------------------------------------------
+
 # Carregamento de artefatos (cacheado para não recarregar a cada interação)
-# ---------------------------------------------------------------------------
+
 
 @st.cache_resource
 def load_artefacts():
@@ -50,9 +37,9 @@ def load_artefacts():
     return model, scaler, cols
 
 
-# ---------------------------------------------------------------------------
+
 # Visualização — gauge de probabilidade
-# ---------------------------------------------------------------------------
+
 
 def _gauge_chart(probability: float):
     fig, ax = plt.subplots(figsize=(5, 3), subplot_kw={"aspect": "equal"})
@@ -86,9 +73,9 @@ def _gauge_chart(probability: float):
     return fig
 
 
-# ---------------------------------------------------------------------------
+
 # UI principal
-# ---------------------------------------------------------------------------
+
 
 st.title("📡 Telco Customer Churn Predictor")
 st.markdown("Preencha os dados do cliente abaixo e clique em **Predict** para ver o risco de churn.")
@@ -108,9 +95,9 @@ api_url = st.sidebar.text_input("URL da API", value="http://localhost:8000")
 if use_api:
     st.sidebar.info("A API precisa estar rodando:\n`uvicorn src.api:app --reload`")
 
-# ---------------------------------------------------------------------------
+
 # Formulário
-# ---------------------------------------------------------------------------
+
 with st.form("customer_form"):
     col1, col2, col3 = st.columns(3)
 
@@ -151,9 +138,9 @@ with st.form("customer_form"):
     submitted = st.form_submit_button("🔍 Prever Churn", use_container_width=True)
 
 
-# ---------------------------------------------------------------------------
+
 # Predição
-# ---------------------------------------------------------------------------
+
 if submitted:
     customer = {
         "gender": gender, "SeniorCitizen": senior,

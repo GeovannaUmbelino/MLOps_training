@@ -1,17 +1,3 @@
-"""
-src/api.py
-==========
-API de inferência FastAPI para predição de churn de clientes.
-
-Endpoints:
-    POST /predict    — recebe features do cliente, retorna probabilidade de churn
-    GET  /health     — liveness check
-    GET  /model-info — tipo e número de features do modelo carregado
-
-Inicialização:
-    uvicorn src.api:app --reload
-"""
-
 from __future__ import annotations
 
 import os
@@ -26,13 +12,9 @@ from pydantic import BaseModel, Field
 from src.config import MODEL_DIR
 from src.feature_engineering import preprocess_inference_row
 
-# ---------------------------------------------------------------------------
-# Schemas Pydantic
-# ---------------------------------------------------------------------------
 
-# Usar Literal nos campos categóricos garante que valores inválidos
-# (ex: "Masculino" no lugar de "Male") sejam rejeitados com 422
-# antes mesmo de chegar na lógica de negócio.
+# Schemas Pydantic
+
 
 class CustomerFeatures(BaseModel):
     gender:           Literal["Male", "Female"]
@@ -94,16 +76,16 @@ class PredictionResponse(BaseModel):
     model_used:        str
 
 
-# ---------------------------------------------------------------------------
+
 # Estado compartilhado entre requests (carregado uma vez no startup)
-# ---------------------------------------------------------------------------
+
 
 state: dict[str, Any] = {}
 
 
-# ---------------------------------------------------------------------------
+
 # Lifespan — carrega artefatos uma única vez ao subir a API
-# ---------------------------------------------------------------------------
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -126,9 +108,9 @@ async def lifespan(app: FastAPI):
     state.clear()
 
 
-# ---------------------------------------------------------------------------
+
 # Aplicação
-# ---------------------------------------------------------------------------
+
 
 app = FastAPI(
     title="Churn Prediction API",
@@ -145,9 +127,9 @@ app.add_middleware(
 )
 
 
-# ---------------------------------------------------------------------------
+
 # Endpoints
-# ---------------------------------------------------------------------------
+
 
 @app.get("/", tags=["Root"])
 def root() -> dict:
@@ -171,12 +153,7 @@ def model_info() -> dict:
 
 @app.post("/predict", response_model=PredictionResponse, tags=["Inference"])
 def predict(customer: CustomerFeatures) -> PredictionResponse:
-    """
-    Recebe as features do cliente e retorna a predição de churn.
-
-    O pré-processamento é feito por `preprocess_inference_row` (feature_engineering.py),
-    garantindo que a lógica seja idêntica à do treino.
-    """
+    
     if "model" not in state:
         raise HTTPException(status_code=503, detail="Modelo não carregado.")
 

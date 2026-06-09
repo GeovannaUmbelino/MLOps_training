@@ -1,10 +1,3 @@
-"""
-src/model.py
-============
-Treinamento de múltiplos modelos com rastreamento completo via MLflow.
-Salva automaticamente o melhor modelo por ROC AUC como best_model.pkl.
-"""
-
 from __future__ import annotations
 
 import os

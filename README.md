@@ -1,113 +1,196 @@
-# Sistema de Previsão de Churn de Clientes
+# 📡 Telco Customer Churn — Pipeline MLOps
 
-Este projeto é uma solução de machine learning de ponta a ponta para prever o churn (rotatividade) de clientes em uma empresa de telecomunicações. Ele contém um pipeline completo que inclui exploração de dados, pré-processamento e treinamento de modelos.
+Pipeline de machine learning **end-to-end** para prever o churn (cancelamento) de clientes de uma empresa de telecomunicações fictícia na Califórnia. O projeto cobre desde a exploração dos dados até o deploy do modelo em produção, com rastreamento de experimentos, API de inferência e interface gráfica.
 
-Melhorias essenciais são: rastreamento de experimentos com MLflow, disponibilização do modelo via uma API de inferência FastAPI e uma interface gráfica via Streamlit.
+---
+
+## 🎯 Objetivo
+
+Dado o [dataset Telco Customer Churn](https://www.kaggle.com/datasets/blastchar/telco-customer-churn) com **7.043 clientes** e **19 features** (dados demográficos, serviços contratados e faturamento), construir um pipeline completo que:
+
+- Treina e compara **6 modelos** de classificação
+- Rastreia todos os experimentos com **MLflow**
+- Disponibiliza o melhor modelo via **API REST (FastAPI)**
+- Permite interação visual via **interface Streamlit**
+- É totalmente contêinerizado com **Docker**
 
 ---
 
 ## 📁 Estrutura do Projeto
 
-```bash
-MLOps-training/
+```
+MLOps_training/
 │
-├── data/                   # Arquivos de dados brutos e processados
-│   ├── processed/
-│   └── raw/
-├── models/                 # Artefatos de modelos pré-treinados e salvos
-├── notebooks/              # Notebooks Jupyter para EDA, treinamento e avaliação
-├── outputs/                # Relatórios, métricas de avaliação ou plots gerados pelo mlflow
-├── src/                    # Módulos Python principais
-│   ├── __init__.py
-│   ├── config.py
-│   ├── data_preprocessing.py
-│   ├── model.py
-│   └── visualization.py
-├── main.py                 # Função principal do programa
+├── data/
+│   ├── raw/                        # Dataset original
+│   └── processed/                  # Dataset antes das transformações
+│
+├── models/
+│   ├── best_model.pkl             
+│   ├── scaler.pkl                  # StandardScaler ajustado no treino
+│   └── columns.pkl                 # Features do treino (alinhamento inferência)
+│
+├── notebooks/
+│   └── EDA.ipynb                   # Análise exploratória de dados
+│
+├── outputs/                        # Matrizes de confusão + curva ROC
+│
+├── src/
+│   ├── config.py                   # Caminhos e configurações globais
+│   ├── feature_engineering.py      # Fonte única de transformações de features
+│   ├── data_preprocessing.py       # Carga, limpeza, encoding e scaling
+│   ├── model.py                    # Treinamento com MLflow tracking
+│   ├── visualization.py            # Plots auxiliares
+│   ├── api.py                      # API FastAPI de inferência
+│   └── app.py                      # Interface Streamlit
+│
+├── main.py                         # Ponto de entrada do pipeline
+├── Dockerfile
+├── docker-compose.yml
+├── pyproject.toml
 └── README.md
 ```
 
 ---
 
-## Componentes & Visão Geral do Pipeline
+## 🤖 Modelos Treinados
 
-1. **Exploração de Dados (notebooks/)**
-   - Entender distribuições de features, correlações e valores ausentes.
-   - Visualizações comparando clientes que churnaram e os que não churnaram.
+| Modelo | Métricas rastreadas |
+|---|---|
+| Logistic Regression | accuracy, f1, precision, recall, roc_auc |
+| Random Forest | idem |
+| XGBoost | idem |
+| KNN | idem |
+| SVM | idem |
+| MLP (Neural Network) | idem |
 
-2. **Pré-processamento (src/data_preprocessing.py)**
-   - Tratamento de valores ausentes
-   - Codificação de variáveis categóricas
-   - Escalonamento/normalização de features
-
-3. **Treinamento de Modelos (src/model.py + notebook)**
-   - Modelos treinados:
-     - Regressão Logística
-     - Random Forest
-     - XGBoost
-     - K-Nearest Neighbors (KNN)
-     - Support Vector Machine (SVM)
-     - Multi-layer Perceptron (MLP)
-
-4. **Avaliação (src/visualization.py + notebook)**
-   - Acurácia, F1 score, ROC AUC
-   - Plots: Matriz de Confusão, curvas ROC, etc.
+O melhor modelo é selecionado automaticamente por **ROC AUC** e salvo em `models/best_model.pkl`.
 
 ---
 
-## Ferramentas & Bibliotecas Utilizadas
+## 🚀 Como Rodar
 
-- **Python 3.12**
-- **Pandas**, **NumPy**, **scikit-learn** – Processamento de dados e modelagem
-- **XGBoost** – Modelo de boosting avançado
-- **MLflow** – Rastreamento de experimentos e registro de modelos
-- **FastAPI** – API de inferência
-- **Streamlit** – Frontend opcional
-- **Docker** – Contêinerização para desenvolvimento e deploy
-- **matplotlib**, **seaborn** – Visualizações
+### Pré-requisito
+
+Ter o dataset `churn-data.csv` em `data/raw/`. Download: [Kaggle — Telco Customer Churn](https://www.kaggle.com/datasets/blastchar/telco-customer-churn)
 
 ---
 
-## Como Usar o Projeto
-
-### 1. Configurar o Ambiente
+### Opção 1 — Local
 
 ```bash
-uv init
-uv sync
-source .venv/bin/activate  # No Windows: source .venv\Scripts\activate
+# 1. Criar e ativar ambiente virtual
+python -m venv .venv
+source .venv/bin/activate        # Windows: .venv\Scripts\activate
+
+# 2. Instalar dependências
+pip install mlflow fastapi "uvicorn[standard]" streamlit xgboost \
+            scikit-learn pandas numpy joblib pydantic requests \
+            matplotlib seaborn
+
+# 3. Treinar os modelos (gera best_model.pkl, scaler.pkl, columns.pkl)
+python main.py
+
+# 4. Explorar experimentos no MLflow  →  http://localhost:5000
+mlflow ui
+
+# 5. Subir a API FastAPI  →  http://localhost:8000/docs
+uvicorn src.api:app --reload
+
+# 6. Subir a interface Streamlit  →  http://localhost:8501
+streamlit run src/app.py
 ```
 
-### 2. Executar o Notebook Jupyter
+> Os passos 4, 5 e 6 rodam em **terminais separados** simultaneamente.
+
+---
+
+### Opção 2 — Docker Compose
 
 ```bash
-jupyter notebook notebooks/EDA.ipynb
+# Subir MLflow + API + Streamlit
+docker-compose up --build
+
+# Em outro terminal: treinar os modelos dentro do container
+docker-compose run --rm train
 ```
 
-### 3. TODOs:
+| Serviço | URL |
+|---|---|
+| MLflow UI | http://localhost:5000 |
+| FastAPI (Swagger) | http://localhost:8000/docs |
+| Streamlit | http://localhost:8501 |
 
-**Rastreamento de Experimentos com MLflow**
-   - Treina múltiplos modelos
-   - Registra métricas, modelos e artefatos.
-   - Compara desempenho entre diferentes modelos.
-   - Salva o modelo com melhor desempenho
+---
 
-**API de Inferência (FastAPI - `src/api.py`)**
-   - Aceita entrada em JSON
-   - Pré-processa a requisição
-   - Carrega o melhor modelo
-   - Retorna a predição
+## 📬 Exemplo de Requisição à API
 
-**Interface do modelo com Streamlit**
-   - Permite interagir com o modelo via interface gráfica
+```bash
+curl -X POST http://localhost:8000/predict \
+  -H "Content-Type: application/json" \
+  -d '{
+    "gender": "Female",
+    "SeniorCitizen": 0,
+    "Partner": "Yes",
+    "Dependents": "No",
+    "tenure": 1,
+    "PhoneService": "No",
+    "MultipleLines": "No phone service",
+    "InternetService": "DSL",
+    "OnlineSecurity": "No",
+    "OnlineBackup": "Yes",
+    "DeviceProtection": "No",
+    "TechSupport": "No",
+    "StreamingTV": "No",
+    "StreamingMovies": "No",
+    "Contract": "Month-to-month",
+    "PaperlessBilling": "Yes",
+    "PaymentMethod": "Electronic check",
+    "MonthlyCharges": 29.85,
+    "TotalCharges": 29.85
+  }'
+```
 
-### Trabalhos Futuros
+**Resposta:**
+```json
+{
+  "churn": true,
+  "churn_label": "Churn",
+  "churn_probability": 0.7312,
+  "model_used": "LogisticRegression"
+}
+```
 
-- Adicionar **testes** unitários e de integração
-- Automatizar todo o pipeline com **CI/CD**
-- Adicionar **monitoramento** e logging em tempo real
-- Incorporar **re-treinamento automático** de modelos
+---
 
-## Licença
+## 🔑 Decisões Técnicas
 
-Este projeto é para **fins educacionais**.
+**`feature_engineering.py` como fonte única de verdade**
+Toda a lógica de transformação de features (`encode_features`, `align_columns`, `scale_numeric`) está centralizada em um único módulo. Tanto o pipeline de treino quanto a API e o Streamlit importam daqui, eliminando o risco de *training-serving skew* — divergência entre como o modelo foi treinado e como os dados chegam na inferência.
+
+**`lifespan` no FastAPI**
+Os artefatos (`best_model.pkl`, `scaler.pkl`, `columns.pkl`) são carregados **uma única vez** no startup da aplicação via `asynccontextmanager`, não a cada requisição. Isso garante baixa latência e falha rápida se algum artefato estiver ausente.
+
+**Seleção do melhor modelo por ROC AUC**
+ROC AUC é mais informativa que acurácia em datasets desbalanceados (churn tipicamente tem ~26% de positivos). O modelo com maior AUC é automaticamente persistido como `best_model.pkl`.
+
+---
+
+## 🛠️ Stack
+
+| Categoria | Tecnologia |
+|---|---|
+| Linguagem | Python 3.12 |
+| Dados | Pandas, NumPy |
+| Modelos | scikit-learn, XGBoost |
+| Rastreamento | MLflow |
+| API | FastAPI, Uvicorn, Pydantic |
+| Frontend | Streamlit, Matplotlib |
+| Deploy | Docker, Docker Compose |
+| Visualizações | Matplotlib, Seaborn |
+
+---
+
+## 📄 Licença
+
+Projeto desenvolvido para fins educacionais — Desafio Trenne.
