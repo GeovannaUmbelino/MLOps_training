@@ -161,18 +161,7 @@ curl -X POST http://localhost:8000/predict \
 }
 ```
 
----
 
-## 🔑 Decisões Técnicas
-
-**`feature_engineering.py` como fonte única de verdade**
-Toda a lógica de transformação de features (`encode_features`, `align_columns`, `scale_numeric`) está centralizada em um único módulo. Tanto o pipeline de treino quanto a API e o Streamlit importam daqui, eliminando o risco de *training-serving skew* — divergência entre como o modelo foi treinado e como os dados chegam na inferência.
-
-**`lifespan` no FastAPI**
-Os artefatos (`best_model.pkl`, `scaler.pkl`, `columns.pkl`) são carregados **uma única vez** no startup da aplicação via `asynccontextmanager`, não a cada requisição. Isso garante baixa latência e falha rápida se algum artefato estiver ausente.
-
-**Seleção do melhor modelo por ROC AUC**
-ROC AUC é mais informativa que acurácia em datasets desbalanceados (churn tipicamente tem ~26% de positivos). O modelo com maior AUC é automaticamente persistido como `best_model.pkl`.
 
 ---
 
